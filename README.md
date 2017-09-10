@@ -16,7 +16,7 @@ Then install clinfo (using apt-get) to verify the number of OpenCL platforms and
 
 Navigate to the FLASH directory. Configure the system by editing the following section of LSHReservoir_config.h guided by the comments: 
 
-'''
+```
 // Comment out if not using GPU. 
 #define USE_GPU
 // Comment out if using OpenCL 1.XX. Does not matter if not usng GPU. 
@@ -26,15 +26,15 @@ Navigate to the FLASH directory. Configure the system by editing the following s
 #define CL_CPU_PLATFORM 1
 #define CL_GPU_DEVICE 0 // Does not matter if not usng GPU. 
 #define CL_CPU_DEVICE 0
-'''
+```
 
 Fill in CL_GPU_PLATFORM / CL_GPU_PLATFORM according to the order that the platforms appear in the output of clinfo. If multiple devices exist, fill in CL_GPU_DEVICE / CL_CPU_DEVICE to choose the desired device according to their order in the output of clinfo. 
 
 Save and close the file. Type in terminal:
 
-'''
+```
 make
-'''
+```
 
 The compilation is complete if no errors appear. 
 
@@ -42,9 +42,9 @@ The compilation is complete if no errors appear.
 
 The current example code in the main() function verifies one of the results presented in [our paper](https://arxiv.org/pdf/1709.01190.pdf) on the Webspam dataset. Download the dataset from [libsvm](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#webspam). Download the groundtruths from  this [link](https://github.com/wangyiqiu/webspam). Place the dataset and groundtruth files in the FLASH directory. Run the program from the terminal:
 
-'''
+```
 ./runme
-'''
+```
 
 The test program builds multiple hash tables for the dataset and query 10,000 test vectors followed by quality evaluations. The program will run with console outputs, indicating the progress and performance. The parameters, such as L, K and R can be edited in main.cpp. A re-compilation is required after changing the parameters. Please note that the time for parsing the dataset from disk might take about 5-10 minutes. 
 
