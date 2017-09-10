@@ -9,13 +9,13 @@ We tested our system on a few large scale sparse datasets including [url](https:
 The following results are from a head-to-head comparison with [NMSLIB](https://github.com/searchivarius/nmslib) v1.6 hnsw, one of the best methods available (see [ann-benchmarks](https://github.com/erikbern/ann-benchmarks)) on these datasets. In particular, we compared the timing for the construction of full knn-graph from grounds up, and the per-query timing (after building the index). We also estimated and compared the memory consumption of the index. 
 
 **Webspam, Url**
-
-![webspam_url_table](https://github.com/RUSH-LAB/Flash/blob/master/plots/webspam_url_table.PNG)
-![webspam_url_plots](https://github.com/RUSH-LAB/Flash/blob/master/plots/allplots.PNG)
+<img src="https://github.com/RUSH-LAB/Flash/blob/master/plots/webspam_url_table.PNG" width="1115" height="142" />
+<img src="https://github.com/RUSH-LAB/Flash/blob/master/plots/url_plots.PNG" width="1232" height="517" />
+<img src="https://github.com/RUSH-LAB/Flash/blob/master/plots/url_plots.PNG" width="1232" height="517" />
 
 **Kdd2012**
 
-![kdd_table](https://github.com/RUSH-LAB/Flash/blob/master/plots/kdd12_table.PNG)
+<img src="https://github.com/RUSH-LAB/Flash/blob/master/plots/kdd12_table.PNG" width="739" height="79" />
 
 ## Prerequisites
 
