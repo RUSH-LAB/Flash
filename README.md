@@ -10,13 +10,13 @@ The following results are from a head-to-head comparison with [NMSLIB](https://g
 
 **Webspam, Url**
 
-<img src="https://github.com/RUSH-LAB/Flash/blob/master/plots/webspam_url_table.PNG" width="557" height="71" />
-<img src="https://github.com/RUSH-LAB/Flash/blob/master/plots/url_plots.PNG" width="616" height="258" />
-<img src="https://github.com/RUSH-LAB/Flash/blob/master/plots/url_plots.PNG" width="616" height="258" />
+<img src="https://github.com/RUSH-LAB/Flash/blob/master/plots/webspam_url_table.PNG" width="668" height="85" />
+<img src="https://github.com/RUSH-LAB/Flash/blob/master/plots/webspam_plots.PNG" width="739" height="310" />
+<img src="https://github.com/RUSH-LAB/Flash/blob/master/plots/url_plots.PNG" width="739" height="310" />
 
 **Kdd2012**
 
-<img src="https://github.com/RUSH-LAB/Flash/blob/master/plots/kdd12_table.PNG" width="369" height="40" />
+<img src="https://github.com/RUSH-LAB/Flash/blob/master/plots/kdd12_table.PNG" width="442" height="48" />
 
 ## Prerequisites
 
