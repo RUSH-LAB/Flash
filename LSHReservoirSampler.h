@@ -121,7 +121,13 @@ private:
 	void mock_markdiff(unsigned int *tallyCnt, unsigned int* tally, int numQueryEntries, int segmentSizePow2);
 	void mock_agg(unsigned int *g_queryCt, unsigned int *tallyCnt, unsigned int* tally, int numQueryEntries, int segmentSizePow2);
 	void mock_sub(unsigned int *g_queryCt, unsigned int *tallyCnt, unsigned int* tally, int numQueryEntries, int segmentSize, int segmentSizePow2);
-	
+	void ann_debug(int numQueryEntries, int* dataIdx, float* dataVal, int* dataMarker, int topk);
+	void viewTables();
+	int benchCounting(int segmentSize, int* dataIdx, float* dataVal, int* dataMarker, float *timings);
+
+	/* Experimental. */
+	void lossy_ann(int numQueryEntries, int* dataIdx, float* dataVal, int* dataMarker, unsigned int* outputs, int k);
+
 public:
 	cl_platform_id *platforms;
 
@@ -138,8 +144,6 @@ public:
 	void restart(LSH *hashFamIn, unsigned int numHashPerFamily, unsigned int numHashFamilies,
 		unsigned int reservoirSize, unsigned int dimension, unsigned int numSecHash, unsigned int maxSamples,
 		unsigned int queryProbes, unsigned int hashingProbes, float tableAllocFraction);
-
-	int benchCounting(int segmentSize, int* dataIdx, float* dataVal, int* dataMarker, float *timings);
 
 	/** Constructor. 
 
@@ -190,7 +194,7 @@ public:
 	*/
 	void ann(int numQueryEntries, int* dataIdx, float* dataVal, int* dataMarker, unsigned int* outputs, int k);
 
-	void lossy_ann(int numQueryEntries, int* dataIdx, float* dataVal, int* dataMarker, unsigned int* outputs, int k);
+	
 
 	/** Adds input vectors (in dense format) to the hash table.
 
@@ -213,10 +217,6 @@ public:
 	@param k number of near-neighbors to query for each query vector.
 	*/
 	void ann(int numQueryEntries, float* queries, unsigned int* outputs, int k);	
-
-	void ann_debug(int numQueryEntries, int* dataIdx, float* dataVal, int* dataMarker, int topk);
-
-	void viewTables();
 
 	/** Print current parameter settings to the console. 
 	*/
