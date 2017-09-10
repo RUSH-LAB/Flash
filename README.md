@@ -40,7 +40,7 @@ The compilation is complete if no errors appear.
 
 ## Tutorial
 
-The current example code in the main() function verifies one of the results presented in [our paper](https://arxiv.org/pdf/1709.01190.pdf) on the Webspam dataset. Download the dataset from [libsvm](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#webspam). Download the groundtruths from  this [link](https://github.com/wangyiqiu/webspam). Place the dataset and groundtruth files in the FLASH directory. Run the program from the terminal:
+The current example code in the main() function verifies one of the results presented in [our paper](https://arxiv.org/pdf/1709.01190.pdf) on the Webspam dataset. Download the dataset from [libsvm](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#webspam), and rename the libsvm-format file as trigram.svm. Download the groundtruths from  this [link](https://github.com/wangyiqiu/webspam). Place the dataset and groundtruth files in the FLASH directory. Run the program from the terminal:
 
 ```
 ./runme

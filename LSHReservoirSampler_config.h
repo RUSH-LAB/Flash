@@ -5,10 +5,10 @@
 // Comment out if using OpenCL 1.XX. Does not matter if not usng GPU. 
 #define OPENCL_2XX
 
-#define CL_GPU_PLATFORM 0 // Does not matter if not usng GPU. 
-#define CL_CPU_PLATFORM 1
-#define CL_GPU_DEVICE 0 // Does not matter if not usng GPU. 
-#define CL_CPU_DEVICE 0
+#define CL_GPU_PLATFORM 0 // Does not matter if not usng OpenCL-GPU. 
+#define CL_CPU_PLATFORM 1 // Does not matter if not usng OpenCL-CPU. 
+#define CL_GPU_DEVICE 0 // Does not matter if not usng OpenCL-GPU. 
+#define CL_CPU_DEVICE 0 // Does not matter if not usng OpenCL-CPU. 
 
 // Choose to work with sparse or dense data. 
 #define SPARSE
