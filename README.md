@@ -16,7 +16,7 @@ The following results are from a head-to-head comparison with [NMSLIB](https://g
 
 **Kdd2012**
 
-<img src="https://github.com/RUSH-LAB/Flash/blob/master/plots/kdd12_table.PNG" width="442" height="48" />
+<img src="https://github.com/RUSH-LAB/Flash/blob/master/plots/kdd12_table.PNG" width="530" height="58" />
 
 ## Prerequisites
 
