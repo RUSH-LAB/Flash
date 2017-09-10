@@ -10,12 +10,12 @@ The following results are from a head-to-head comparison with [NMSLIB](https://g
 
 **Webspam, Url**
 
-![webspam_url_table](https://github.com/RUSH-LAB/Flash/plots/webspam_url_table.png)
-![webspam_url_plots](https://github.com/RUSH-LAB/Flash/plots/allplots.png)
+![webspam_url_table](https://github.com/RUSH-LAB/Flash/blob/master/plots/webspam_url_table.png)
+![webspam_url_plots](https://github.com/RUSH-LAB/Flash/blob/master/plots/allplots.png)
 
 **Kdd2012**
 
-![kdd_table](https://github.com/RUSH-LAB/Flash/plots/kdd_table.png)
+![kdd_table](https://github.com/RUSH-LAB/Flash/blob/master/plots/kdd_table.png)
 
 ## Prerequisites
 
