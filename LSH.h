@@ -9,6 +9,7 @@
 #include <random>
 #include <algorithm>
 #include "omp.h"
+#include "ALSH.h"
 
 //#define DEBUG
 #define MAGIC_NUMBER 100

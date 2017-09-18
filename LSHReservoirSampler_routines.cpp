@@ -40,47 +40,6 @@ void LSHReservoirSampler::HashAddGPUTB(cl_mem *allprobsHash_gpuobj, cl_mem* allp
 #endif
 }
 
-void LSHReservoirSampler::HashAddCPUCLTB(cl_mem *allprobsHash_gpuobj, cl_mem* allprobsIdx_gpuobj, int numProbePerTb, int numInputEntries) {
-#ifdef PROFILE_READ
-	float compute_time = 0;
-	float transfer_time = 0;
-	auto transfer_begin = Clock::now();
-#endif
-	
-	cl_mem allprobsHash_cpuobj = clCreateBuffer(context_cpu, CL_MEM_READ_WRITE,
-		_numTables * numProbePerTb * sizeof(unsigned int), NULL, &_err);
-	cl_mem allprobsIdx_cpuobj = clCreateBuffer(context_cpu, CL_MEM_READ_WRITE,
-		_numTables * numProbePerTb * sizeof(unsigned int), NULL, &_err);
-	clMemCpy_uint_g2c(&allprobsHash_cpuobj, allprobsHash_gpuobj, _numTables * numProbePerTb);
-	clMemCpy_uint_g2c(&allprobsIdx_cpuobj, allprobsIdx_gpuobj, _numTables * numProbePerTb);
-	cl_mem storelog_cpuobj = clCreateBuffer(context_cpu, CL_MEM_READ_WRITE,
-		_numTables * 4 * numProbePerTb * sizeof(unsigned int), NULL, &_err);
-	_err = clEnqueueFillBuffer(command_queue_cpu, storelog_cpuobj, &_zero, sizeof(const int), 0,
-		_numTables * 4 * numProbePerTb * sizeof(unsigned int), 0, NULL, NULL);
-	clCheckError(_err, "[LSHReservoirSampler::HashAddCPUCLTB] Failed to create storelog_cpuobj buffer!");
-
-#ifdef PROFILE_READ
-	auto transfer_end = Clock::now();
-	transfer_time += GETTIME_MS(transfer_begin, transfer_end);
-	auto compute_begin = Clock::now();
-#endif
-
-	std::cout << "reservoir_sampling_cpu_opencl ..." << std::endl;
-	reservoir_sampling_cpu_opencl(&allprobsHash_cpuobj, &allprobsIdx_cpuobj, &storelog_cpuobj, numProbePerTb);
-	clReleaseMemObject(allprobsHash_cpuobj);
-	clReleaseMemObject(allprobsIdx_cpuobj);
-	std::cout << "add_table_cpu_opencl ..." << std::endl;
-	add_table_cpu_opencl(&storelog_cpuobj, numProbePerTb);
-	clReleaseMemObject(storelog_cpuobj);
-
-#ifdef PROFILE_READ
-	auto compute_end = Clock::now();
-	compute_time += GETTIME_MS(compute_begin, compute_end);
-	printf("[LSHReservoirSampler::HashAddCPUCLTB] Computation %5.3f ms, MemTransfer %5.3f ms\n", compute_time, transfer_time);
-#endif
-
-}
-
 void LSHReservoirSampler::HashAddCPUTB(unsigned int *allprobsHash, unsigned int* allprobsIdx, int numProbePerTb, int numInputEntries) {
 #ifdef PROFILE_READ
 	float compute_time = 0;
@@ -123,39 +82,6 @@ void LSHReservoirSampler::RowsAggregationGPUTB(cl_mem *hashIndices_gpuobj, cl_me
 	auto compute_end = Clock::now();
 	compute_time += GETTIME_MS(compute_begin, compute_end);
 	printf("[LSHReservoirSampler::RowsAggregationGPUTB] Computation %5.3f ms, MemTransfer %5.3f ms\n", compute_time, transfer_time);
-#endif
-}
-
-void LSHReservoirSampler::RowsAggregationCPUCLTB(cl_mem *hashIndices_gpuobj, cl_mem *tally_gpuobj, int segmentSizePow2, int numQueryEntries) {
-#ifdef PROFILE_READ
-	float compute_time = 0;
-	float transfer_time = 0;
-	auto transfer_begin = Clock::now();
-#endif
-	cl_mem tally_cpuobj = clCreateBuffer(context_cpu, CL_MEM_READ_WRITE,
-		numQueryEntries * segmentSizePow2 * sizeof(unsigned int), NULL, &_err);
-	_err |= clEnqueueFillBuffer(command_queue_cpu, tally_cpuobj, &_zero, sizeof(const int), 0,
-		numQueryEntries * segmentSizePow2 * sizeof(unsigned int), 0, NULL, NULL);
-	cl_mem hashIndices_cpuobj = clCreateBuffer(context_cpu, CL_MEM_READ_WRITE,
-		_queryProbes * numQueryEntries * _numTables * sizeof(unsigned int), NULL, &_err);
-	clMemCpy_uint_g2c(&hashIndices_cpuobj, hashIndices_gpuobj, _queryProbes * numQueryEntries * _numTables);
-#ifdef PROFILE_READ
-	auto transfer_end = Clock::now();
-	transfer_time += GETTIME_MS(transfer_begin, transfer_end);
-	auto compute_begin = Clock::now();
-#endif
-	query_extractRows_cpu_opencl(numQueryEntries, segmentSizePow2, &tally_cpuobj, &hashIndices_cpuobj);
-	clReleaseMemObject(hashIndices_cpuobj);
-#ifdef PROFILE_READ
-	auto compute_end = Clock::now();
-	compute_time += GETTIME_MS(compute_begin, compute_end);
-	transfer_begin = Clock::now();
-#endif
-	clMemCpy_uint_c2g(tally_gpuobj, &tally_cpuobj, numQueryEntries * segmentSizePow2);
-#ifdef PROFILE_READ
-	transfer_end = Clock::now();
-	transfer_time += GETTIME_MS(transfer_begin, transfer_end);
-	printf("[LSHReservoirSampler::RowsAggregationCPUCLTB] Computation %5.3f ms, MemTransfer %5.3f ms\n", compute_time, transfer_time);
 #endif
 }
 
@@ -495,8 +421,8 @@ void LSHReservoirSampler::kSelect_debug(cl_mem *tally_gpuobj,  unsigned int *tal
 
 /* Benchmarks the counting step of the count-based k-selection. */
 int LSHReservoirSampler::benchCounting(int numQueries, int* dataIdx, float* dataVal, int* dataMarker, float *timings) {
-#if !defined USE_GPU
-	std::cout << "Enable USE_GPU to perform benchmarks on counting. " << std::endl;
+#if !defined USE_OPENCL
+	std::cout << "Enable USE_OPENCL to perform benchmarks on counting. " << std::endl;
 	exit(1);
 #endif
 	float mytime = 0;

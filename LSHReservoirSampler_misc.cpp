@@ -11,27 +11,27 @@ void LSHReservoirSampler::kernelBandWidth(const std::string& kernelName, float b
 	return;
 }
 
-void LSHReservoirSampler::clMemCpy_uint_g2c(cl_mem *dst, cl_mem *src, unsigned int size) {
-	unsigned int *buffer = new unsigned int[size];
-	_err = clEnqueueReadBuffer(command_queue_gpu, *src, CL_TRUE, 0, size * sizeof(unsigned int), buffer, 0, NULL, NULL);
-	clCheckError(_err, "[clMemCpy_uint_g2c] Failed to read from gpu.");
-	clFinish(command_queue_gpu);
-	_err = clEnqueueWriteBuffer(command_queue_cpu, *dst, CL_TRUE, 0, size * sizeof(unsigned int), buffer, 0, NULL, NULL);
-	clCheckError(_err, "[clMemCpy_uint_g2c] Failed to write to cpu.");
-	clFinish(command_queue_cpu);
-	delete[] buffer;
-}
+//void LSHReservoirSampler::clMemCpy_uint_g2c(cl_mem *dst, cl_mem *src, unsigned int size) {
+//	unsigned int *buffer = new unsigned int[size];
+//	_err = clEnqueueReadBuffer(command_queue_gpu, *src, CL_TRUE, 0, size * sizeof(unsigned int), buffer, 0, NULL, NULL);
+//	clCheckError(_err, "[clMemCpy_uint_g2c] Failed to read from gpu.");
+//	clFinish(command_queue_gpu);
+//	_err = clEnqueueWriteBuffer(command_queue_cpu, *dst, CL_TRUE, 0, size * sizeof(unsigned int), buffer, 0, NULL, NULL);
+//	clCheckError(_err, "[clMemCpy_uint_g2c] Failed to write to cpu.");
+//	clFinish(command_queue_cpu);
+//	delete[] buffer;
+//}
 
-void LSHReservoirSampler::clMemCpy_uint_c2g(cl_mem *dst, cl_mem *src, unsigned int size) {
-	unsigned int *buffer = new unsigned int[size];
-	_err = clEnqueueReadBuffer(command_queue_cpu, *src, CL_TRUE, 0, size * sizeof(unsigned int), buffer, 0, NULL, NULL);
-	clCheckError(_err, "[clMemCpy_uint_c2g] Failed to read from cpu.");
-	clFinish(command_queue_cpu);
-	_err |= clEnqueueWriteBuffer(command_queue_gpu, *dst, CL_TRUE, 0, size * sizeof(unsigned int), buffer, 0, NULL, NULL);
-	clCheckError(_err, "[clMemCpy_uint_c2g] Failed to write to gpu.");
-	clFinish(command_queue_gpu);
-	delete[] buffer;
-}
+//void LSHReservoirSampler::clMemCpy_uint_c2g(cl_mem *dst, cl_mem *src, unsigned int size) {
+//	unsigned int *buffer = new unsigned int[size];
+//	_err = clEnqueueReadBuffer(command_queue_cpu, *src, CL_TRUE, 0, size * sizeof(unsigned int), buffer, 0, NULL, NULL);
+//	clCheckError(_err, "[clMemCpy_uint_c2g] Failed to read from cpu.");
+//	clFinish(command_queue_cpu);
+//	_err |= clEnqueueWriteBuffer(command_queue_gpu, *dst, CL_TRUE, 0, size * sizeof(unsigned int), buffer, 0, NULL, NULL);
+//	clCheckError(_err, "[clMemCpy_uint_c2g] Failed to write to gpu.");
+//	clFinish(command_queue_gpu);
+//	delete[] buffer;
+//}
 
 void LSHReservoirSampler::memCpy_uint_g2c(unsigned int *dst, cl_mem *src, unsigned int size) {
 	_err = clEnqueueReadBuffer(command_queue_gpu, *src, CL_TRUE, 0, size * sizeof(unsigned int), dst, 0, NULL, NULL);
@@ -47,7 +47,7 @@ void LSHReservoirSampler::memCpy_uint_c2g(cl_mem *dst, unsigned int *src, unsign
 
 void LSHReservoirSampler::checkTableMemLoad() {
 	
-#if defined GPU_TB
+#if defined OPENCL_HASHTABLE
 	_tableMemAllocator = new unsigned int[_numTables * sizeof(unsigned int)];
 	_err = clEnqueueReadBuffer(command_queue_gpu, _tableMemAllocator_obj, CL_TRUE, 0,
 		_numTables * sizeof(unsigned int), _tableMemAllocator, 0, NULL, NULL);
@@ -69,7 +69,7 @@ void LSHReservoirSampler::checkTableMemLoad() {
 		((float)minn) / (float)_aggNumReservoirs,
 		((float)maxx) / (float)_aggNumReservoirs,
 		((float)tt) / (float)(_numTables * _aggNumReservoirs));
-#if defined GPU_TB
+#if defined OPENCL_HASHTABLE
 	delete[] _tableMemAllocator;
 #endif
 }
@@ -146,7 +146,7 @@ void LSHReservoirSampler::showParams() {
 }
 
 void LSHReservoirSampler::viewTables() {
-#if defined GPU_TB
+#if defined OPENCL_HASHTABLE
 	_tablePointers = new unsigned int[_numReservoirsHashed * _numTables];
 	_tableMem = new unsigned int[_tableMemMax];
 	_err = clEnqueueReadBuffer(command_queue_gpu, _tablePointers_obj, CL_TRUE, 0,
@@ -173,7 +173,7 @@ void LSHReservoirSampler::viewTables() {
 	}
 
 	pause();
-#if defined GPU_TB
+#if defined OPENCL_HASHTABLE
 	delete[] _tableMem;
 #endif
 }

@@ -19,7 +19,7 @@ LSHReservoirSampler::LSHReservoirSampler(LSH *hashFamIn, unsigned int numHashPer
 	initVariables(numHashPerFamily, numHashFamilies, reservoirSize, dimension, numSecHash, maxSamples, queryProbes, 
 		hashingProbes, tableAllocFraction);
 
-#if defined USE_GPU
+#if defined USE_OPENCL
 	clPlatformDevices();
 	clContext();
 	clProgram();
@@ -36,7 +36,7 @@ LSHReservoirSampler::LSHReservoirSampler(LSH *hashFamIn, unsigned int numHashPer
 #endif
 #if defined CL_TEST_GPU
 	float gpu_test_size = (float)CL_TEST_GPU*(float)sizeof(int) / (float)1000000000;
-	printf("Testing GPU Device %d Allocation (%3.1f GiB) Bandwidth.\n", CL_GPU_DEVICE, gpu_test_size);
+	printf("Testing GPU Device %d Allocation (%3.1f GiB) Bandwidth.\n", CL_DEVICE_ID, gpu_test_size);
 	clTestAlloc(CL_TEST_GPU, &context_gpu, &command_queue_gpu);
 #endif
 
@@ -94,7 +94,7 @@ void LSHReservoirSampler::initHelper(int numTablesIn, int numHashPerFamilyIn, in
 		std::uniform_int_distribution<unsigned int> distribution(0, i);
 		_global_rand[i] = distribution(generator1);
 	}
-#if defined GPU_TB
+#if defined OPENCL_HASHTABLE
 	_globalRand_obj = clCreateBuffer(context_gpu, CL_MEM_READ_WRITE,
 		_maxReservoirRand * sizeof(unsigned int), NULL, &_err);
 	_err = clEnqueueWriteBuffer(command_queue_gpu, _globalRand_obj, CL_TRUE, 0,
@@ -106,7 +106,7 @@ void LSHReservoirSampler::initHelper(int numTablesIn, int numHashPerFamilyIn, in
 	_tableMemReservoirMax = (_numTables - 1) * _aggNumReservoirs + _numReservoirsHashed;
 	_tableMemMax = _tableMemReservoirMax * (1 + _reservoirSize);
 	_tablePointerMax = _numTables * _numReservoirsHashed;
-#if defined GPU_TB
+#if defined OPENCL_HASHTABLE
 	std::cout << "Initializing GPU-OpenCL tables and pointers ...  " << std::endl;
 	_tableMem_obj = clCreateBuffer(context_gpu, CL_MEM_READ_WRITE,
 		_tableMemMax * sizeof(unsigned int), NULL, &_err);
@@ -164,12 +164,12 @@ LSHReservoirSampler::~LSHReservoirSampler() {
 	clReleaseContext(context_gpu);
 	free(devices_gpu);
 
-	clFlush(command_queue_cpu);
-	clFinish(command_queue_cpu);
-	clReleaseProgram(program_cpu);
-	clReleaseCommandQueue(command_queue_cpu);
-	clReleaseContext(context_cpu);
-	free(devices_cpu);
+	//clFlush(command_queue_cpu);
+	//clFinish(command_queue_cpu);
+	//clReleaseProgram(program_cpu);
+	//clReleaseCommandQueue(command_queue_cpu);
+	//clReleaseContext(context_cpu);
+	//free(devices_cpu);
 
 	free(platforms);
 	
@@ -191,15 +191,11 @@ LSHReservoirSampler::~LSHReservoirSampler() {
 	clReleaseKernel(kernel_subtractdiff);
 	clReleaseKernel(kernel_tally_naive);
 
-	clReleaseKernel(kernelc_reservoir);
-	clReleaseKernel(kernelc_addtable);
-	clReleaseKernel(kernelc_extract_rows);
-
 	unInit();
 }
 
 void LSHReservoirSampler::unInit() {
-#if defined GPU_TB
+#if defined OPENCL_HASHTABLE
 	clReleaseMemObject(_tableMem_obj);
 	clReleaseMemObject(_tableMemAllocator_obj);
 	clReleaseMemObject(_tablePointers_obj);
@@ -234,18 +230,18 @@ void LSHReservoirSampler::clPlatformDevices() {
 	cl_uint num_devices;
 	
 	// GPU Platform. 
-	_err = clGetDeviceIDs(platforms[CL_GPU_PLATFORM], CL_DEVICE_TYPE_ALL, 1, NULL, &num_devices); 
+	_err = clGetDeviceIDs(platforms[CL_PLATFORM_ID], CL_DEVICE_TYPE_ALL, 1, NULL, &num_devices); 
 	printf("[OpenCL] %d GPU device found. \n", num_devices); 
 	clCheckError(_err, "[OpenCL] Couldn't find any GPU devices."); 
 	devices_gpu = (cl_device_id*)malloc(sizeof(cl_device_id) * num_devices); 
-	clGetDeviceIDs(platforms[CL_GPU_PLATFORM], CL_DEVICE_TYPE_ALL, num_devices, devices_gpu, NULL); 
-
+	clGetDeviceIDs(platforms[CL_PLATFORM_ID], CL_DEVICE_TYPE_ALL, num_devices, devices_gpu, NULL); 
+	
 	// CPU Platform. 
-	_err = clGetDeviceIDs(platforms[CL_CPU_PLATFORM], CL_DEVICE_TYPE_ALL, 1, NULL, &num_devices);
-	printf("[OpenCL] %d CPU device found. \n", num_devices);
-	clCheckError(_err, "[OpenCL] Couldn't find any CPU devices.");
-	devices_cpu = (cl_device_id*)malloc(sizeof(cl_device_id) * num_devices);
-	clGetDeviceIDs(platforms[CL_CPU_PLATFORM], CL_DEVICE_TYPE_ALL, num_devices, devices_cpu, NULL);
+	//_err = clGetDeviceIDs(platforms[CL_CPU_PLATFORM], CL_DEVICE_TYPE_ALL, 1, NULL, &num_devices);
+	//printf("[OpenCL] %d CPU device found. \n", num_devices);
+	//clCheckError(_err, "[OpenCL] Couldn't find any CPU devices.");
+	//devices_cpu = (cl_device_id*)malloc(sizeof(cl_device_id) * num_devices);
+	//clGetDeviceIDs(platforms[CL_CPU_PLATFORM], CL_DEVICE_TYPE_ALL, num_devices, devices_cpu, NULL);
 		
 #ifdef PRINT_CLINFO
 	cl_uint q0;
@@ -288,18 +284,18 @@ void LSHReservoirSampler::clContext() {
 	cl_uint num_context_devices; // TODO, currenly use 1 device for each platform. 
 	
 	// GPU context. 
-	context_gpu = clCreateContext(NULL, 1, devices_gpu + CL_GPU_DEVICE, NULL, NULL, &_err); 
+	context_gpu = clCreateContext(NULL, 1, devices_gpu + CL_DEVICE_ID, NULL, NULL, &_err); 
 	clCheckError(_err, "[OpenCL] Couldn't create a context."); 
 	_err = clGetContextInfo(context_gpu, CL_CONTEXT_NUM_DEVICES,
 		sizeof(cl_uint), &num_context_devices, NULL); 
 	printf("[OpenCL] Created GPU Context with %d device. \n", num_context_devices); 
 
 	// CPU context. 
-	context_cpu = clCreateContext(NULL, 1, devices_cpu + CL_CPU_DEVICE, NULL, NULL, &_err);
-	clCheckError(_err, "[OpenCL] Couldn't create a context.");
-	_err = clGetContextInfo(context_cpu, CL_CONTEXT_NUM_DEVICES,
-		sizeof(cl_uint), &num_context_devices, NULL);
-	printf("[OpenCL] Created CPU Context with %d device. \n", num_context_devices);
+	//context_cpu = clCreateContext(NULL, 1, devices_cpu + CL_CPU_DEVICE, NULL, NULL, &_err);
+	//clCheckError(_err, "[OpenCL] Couldn't create a context.");
+	//_err = clGetContextInfo(context_cpu, CL_CONTEXT_NUM_DEVICES,
+	//	sizeof(cl_uint), &num_context_devices, NULL);
+	//printf("[OpenCL] Created CPU Context with %d device. \n", num_context_devices);
 }
 
 void LSHReservoirSampler::clProgram() {
@@ -335,18 +331,18 @@ void LSHReservoirSampler::clProgram() {
 		(const char**)program_buffer, program_size, &_err);
 	clCheckError(_err, "[OpenCL] Couldn't create CL program for GPU.");
 
-	program_cpu = clCreateProgramWithSource(context_cpu, NUM_FILES,
-		(const char**)program_buffer, program_size, &_err);
-	clCheckError(_err, "[OpenCL] Couldn't create CL program for CPU.");
+	//program_cpu = clCreateProgramWithSource(context_cpu, NUM_FILES,
+	//	(const char**)program_buffer, program_size, &_err);
+	//clCheckError(_err, "[OpenCL] Couldn't create CL program for CPU.");
 
 	// Build GPU program. 
-	_err = clBuildProgram(program_gpu, 1, devices_gpu + CL_GPU_DEVICE, options, NULL, NULL);
+	_err = clBuildProgram(program_gpu, 1, devices_gpu + CL_DEVICE_ID, options, NULL, NULL);
 	if (_err < 0) {
-		clGetProgramBuildInfo(program_gpu, devices_gpu[CL_GPU_DEVICE],
+		clGetProgramBuildInfo(program_gpu, devices_gpu[CL_DEVICE_ID],
 			CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
 		_program_log = (char*)malloc(log_size + 1);
 		_program_log[log_size] = '\0';
-		clGetProgramBuildInfo(program_gpu, devices_gpu[CL_GPU_DEVICE],
+		clGetProgramBuildInfo(program_gpu, devices_gpu[CL_DEVICE_ID],
 			CL_PROGRAM_BUILD_LOG,
 			log_size + 1, _program_log, NULL);
 		printf("%s\n", _program_log);
@@ -356,20 +352,20 @@ void LSHReservoirSampler::clProgram() {
 	}
 
 	// Build CPU program. 
-	_err = clBuildProgram(program_cpu, 1, devices_cpu + CL_CPU_DEVICE, options, NULL, NULL);
-	if (_err < 0) {
-		clGetProgramBuildInfo(program_cpu, devices_cpu[CL_CPU_DEVICE],
-			CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
-		_program_log = (char*)malloc(log_size + 1);
-		_program_log[log_size] = '\0';
-		clGetProgramBuildInfo(program_cpu, devices_cpu[CL_CPU_DEVICE],
-			CL_PROGRAM_BUILD_LOG,
-			log_size + 1, _program_log, NULL);
-		printf("%s\n", _program_log);
-		free(_program_log);
-		system("pause");
-		exit(1);
-	}
+	//_err = clBuildProgram(program_cpu, 1, devices_cpu + CL_CPU_DEVICE, options, NULL, NULL);
+	//if (_err < 0) {
+	//	clGetProgramBuildInfo(program_cpu, devices_cpu[CL_CPU_DEVICE],
+	//		CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+	//	_program_log = (char*)malloc(log_size + 1);
+	//	_program_log[log_size] = '\0';
+	//	clGetProgramBuildInfo(program_cpu, devices_cpu[CL_CPU_DEVICE],
+	//		CL_PROGRAM_BUILD_LOG,
+	//		log_size + 1, _program_log, NULL);
+	//	printf("%s\n", _program_log);
+	//	free(_program_log);
+	//	system("pause");
+	//	exit(1);
+	//}
 
 	for (int i = 0; i < NUM_FILES; i++) {
 		free(program_buffer[i]);
@@ -381,10 +377,6 @@ void LSHReservoirSampler::clKernels() {
 	kernel_reservoir = clCreateKernel(program_gpu, "reservoir_sampling_recur", NULL);
 	kernel_addtable = clCreateKernel(program_gpu, "add_table", NULL);
 	kernel_extract_rows = clCreateKernel(program_gpu, "extract_rows", NULL);
-
-	kernelc_reservoir = clCreateKernel(program_cpu, "reservoir_sampling_recur", NULL);
-	kernelc_addtable = clCreateKernel(program_cpu, "add_table", NULL);
-	kernelc_extract_rows = clCreateKernel(program_cpu, "extract_rows", NULL);
 
 	kernel_markdiff = clCreateKernel(program_gpu, "mark_diff", NULL);
 	kernel_aggdiff = clCreateKernel(program_gpu, "agg_diff", NULL);
@@ -417,27 +409,19 @@ void LSHReservoirSampler::clKernels() {
 		printf("[OpenCL] GPU Kernels successfully created. \n");
 	}
 
-	if (kernelc_reservoir == NULL || kernelc_addtable == NULL || kernelc_extract_rows == NULL) {
-		printf("[OpenCL] One or more CPU kernels failed to be created. \n");
-		pause();
-		exit(1);
-	}
-	else {
-		printf("[OpenCL] CPU Kernels successfully created. \n");
-	}
 }
 
 void LSHReservoirSampler::clCommandQueue() {
 	// Create command queue.Properties(2): CL_QUEUE_PROFILING_ENABLE, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE. 
 #ifdef OPENCL_2XX
-	command_queue_gpu = clCreateCommandQueueWithProperties(context_gpu, devices_gpu[CL_GPU_DEVICE], NULL, &_err);
+	command_queue_gpu = clCreateCommandQueueWithProperties(context_gpu, devices_gpu[CL_DEVICE_ID], NULL, &_err);
 	clCheckError(_err, "[OpenCL] Couldn't create command queue for GPU.");
-	command_queue_cpu = clCreateCommandQueueWithProperties(context_cpu, devices_cpu[CL_CPU_DEVICE], NULL, &_err);
-	clCheckError(_err, "[OpenCL] Couldn't create command queue for CPU.");
+	//command_queue_cpu = clCreateCommandQueueWithProperties(context_cpu, devices_cpu[CL_CPU_DEVICE], NULL, &_err);
+	//clCheckError(_err, "[OpenCL] Couldn't create command queue for CPU.");
 #else
-	command_queue_gpu = clCreateCommandQueue(context_gpu, devices_gpu[CL_GPU_DEVICE], NULL, &_err);
+	command_queue_gpu = clCreateCommandQueue(context_gpu, devices_gpu[CL_DEVICE_ID], NULL, &_err);
 	clCheckError(_err, "[OpenCL] Couldn't create command queue for GPU.");
-	command_queue_cpu = clCreateCommandQueue(context_cpu, devices_cpu[CL_CPU_DEVICE], NULL, &_err);
-	clCheckError(_err, "[OpenCL] Couldn't create command queue for CPU.");
+	//command_queue_cpu = clCreateCommandQueue(context_cpu, devices_cpu[CL_CPU_DEVICE], NULL, &_err);
+	//clCheckError(_err, "[OpenCL] Couldn't create command queue for CPU.");
 #endif
 }

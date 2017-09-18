@@ -123,11 +123,6 @@ void LSH::getHash(unsigned int *hashIndices, unsigned int *probeDataIdx, float *
 
 
 
-
-
-
-
-
 /* Aux functions. */
 
 void LSH::getHashIdx(unsigned int *hashIndices, unsigned int *hashes, int numInputEntries, int numProbes) {

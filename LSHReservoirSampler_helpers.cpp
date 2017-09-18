@@ -164,49 +164,6 @@ void LSHReservoirSampler::add_table_cpu_openmp(unsigned int *storelog, int numPr
 #endif
 }
 
-void LSHReservoirSampler::reservoir_sampling_cpu_opencl(cl_mem *allprobsHash_obj, cl_mem *allprobsIdx_obj,
-	cl_mem *storelog_obj, int numProbePerTb) {
-#ifdef PROFILE_READ_DETAILED
-	auto begin = Clock::now();
-#endif
-	_err = clSetKernelArg(kernelc_reservoir, 0, sizeof(cl_mem), (void *)&_tableMem_obj);
-	_err |= clSetKernelArg(kernelc_reservoir, 1, sizeof(cl_mem), (void *)&_tablePointers_obj);
-	_err |= clSetKernelArg(kernelc_reservoir, 2, sizeof(cl_mem), (void *)&_tableMemAllocator_obj);
-	_err |= clSetKernelArg(kernelc_reservoir, 3, sizeof(cl_mem), (void *)allprobsHash_obj);
-	_err |= clSetKernelArg(kernelc_reservoir, 4, sizeof(cl_mem), (void *)allprobsIdx_obj);
-	_err |= clSetKernelArg(kernelc_reservoir, 5, sizeof(cl_mem), (void *)storelog_obj);
-	_err |= clSetKernelArg(kernelc_reservoir, 6, sizeof(cl_mem), (void *)&_globalRand_obj);
-	_err |= clSetKernelArg(kernelc_reservoir, 7, sizeof(unsigned int), (void *)&_numReservoirsHashed);
-	_err |= clSetKernelArg(kernelc_reservoir, 8, sizeof(unsigned int), (void *)&numProbePerTb);
-	_err |= clSetKernelArg(kernelc_reservoir, 9, sizeof(unsigned int), (void *)&_aggNumReservoirs);
-	_err |= clSetKernelArg(kernelc_reservoir, 10, sizeof(unsigned int), (void *)&_maxReservoirRand);
-	_err |= clSetKernelArg(kernelc_reservoir, 11, sizeof(unsigned int), (void *)&_sechash_a);
-	_err |= clSetKernelArg(kernelc_reservoir, 12, sizeof(unsigned int), (void *)&_sechash_b);
-	_err |= clSetKernelArg(kernelc_reservoir, 13, sizeof(unsigned int), (void *)&_reservoirSize);
-	_err |= clSetKernelArg(kernelc_reservoir, 14, sizeof(unsigned int), (void *)&_numSecHash);
-
-	clCheckError(_err, "Failed to set kernelc_reservoir arguments!");
-
-	size_t gsize_kernelc_reservoir[2] = { numProbePerTb, _numTables };
-	// size_t lsize_kernelc_reservoir[2] = { 32, _numTables }; // TODO. 
-	_err = clEnqueueNDRangeKernel(command_queue_cpu, kernelc_reservoir, 2, NULL,
-		gsize_kernelc_reservoir, NULL, 0, NULL, NULL);
-	clFinish(command_queue_cpu);
-	clCheckError(_err, "kernelc_reservoir failed!");
-
-#ifdef PROFILE_READ_DETAILED
-	auto end = Clock::now();
-	float etime = (end - begin).count() / (float)1000000;
-	printf("[Timer] kernelc_reservoir took %5.3f ms\n", etime);
-	kernelBandWidth("kernelc_reservoir",
-		(float)2 * numProbePerTb * _numTables * sizeof(unsigned int) + // allProbesHash / Idx
-		(float)numProbePerTb * _numTables * sizeof(unsigned int) +  // tableCounter accesses
-		(float)numProbePerTb * _numTables * sizeof(unsigned int), // reservoirRand accesses
-		(float)_numTables * 4 * numProbePerTb * sizeof(unsigned int), // Storelog
-		etime);
-#endif
-}
-
 void LSHReservoirSampler::reservoir_sampling_gpu(cl_mem *allprobsHash_obj, cl_mem *allprobsIdx_obj,
 	cl_mem *storelog_obj, int numProbePerTb) {
 #ifdef PROFILE_READ_DETAILED
@@ -245,42 +202,6 @@ void LSHReservoirSampler::reservoir_sampling_gpu(cl_mem *allprobsHash_obj, cl_me
 		(float)numProbePerTb * _numTables * sizeof(unsigned int) +  // tableCounter accesses
 		(float)numProbePerTb * _numTables * sizeof(unsigned int), // reservoirRand accesses
 		(float)_numTables * 4 * numProbePerTb * sizeof(unsigned int), // Storelog
-		etime);
-#endif
-}
-
-void LSHReservoirSampler::add_table_cpu_opencl(cl_mem *storelog_obj, int numProbePerTb) {
-
-#ifdef PROFILE_READ_DETAILED
-	auto begin = Clock::now();
-#endif
-	_err = clSetKernelArg(kernelc_addtable, 0, sizeof(cl_mem), (void *)&_tablePointers_obj);
-	_err |= clSetKernelArg(kernelc_addtable, 1, sizeof(cl_mem), (void *)&_tableMem_obj);
-	_err |= clSetKernelArg(kernelc_addtable, 2, sizeof(cl_mem), (void *)storelog_obj);
-	_err |= clSetKernelArg(kernelc_addtable, 3, sizeof(unsigned int), (void *)&numProbePerTb);
-	_err |= clSetKernelArg(kernelc_addtable, 4, sizeof(unsigned int), (void *)&_numReservoirsHashed);
-	_err |= clSetKernelArg(kernelc_addtable, 5, sizeof(unsigned int), (void *)&_aggNumReservoirs);
-	_err |= clSetKernelArg(kernelc_addtable, 6, sizeof(unsigned int), (void *)&_sequentialIDCounter_kernel);
-	_err |= clSetKernelArg(kernelc_addtable, 7, sizeof(unsigned int), (void *)&_sechash_a);
-	_err |= clSetKernelArg(kernelc_addtable, 8, sizeof(unsigned int), (void *)&_sechash_b);
-	_err |= clSetKernelArg(kernelc_addtable, 9, sizeof(unsigned int), (void *)&_reservoirSize);
-	_err |= clSetKernelArg(kernelc_addtable, 10, sizeof(unsigned int), (void *)&_numSecHash);
-	clCheckError(_err, "Failed to set kernelc_addtable arguments!");
-
-	size_t gsize_kernelc_addtable[2] = { _numTables, numProbePerTb };
-	_err = clEnqueueNDRangeKernel(command_queue_cpu, kernelc_addtable, 2, NULL,
-		gsize_kernelc_addtable, NULL, 0, NULL, NULL);
-	clFinish(command_queue_cpu);
-	clCheckError(_err, "kernelc_addtable failed!");
-
-#ifdef PROFILE_READ_DETAILED
-	auto end = Clock::now();
-	float etime = (end - begin).count() / (float)1000000;
-	printf("[Timer] kernelc_addtable took %5.3f ms\n", etime);
-
-	kernelBandWidth("kernelc_addtable",
-		(float)_numTables * 1 * numProbePerTb * sizeof(unsigned int) * 4, // All of the storelog. 
-		(float)_numTables * 1 * numProbePerTb * sizeof(unsigned int) * 0.5, // Probabilistic store, p = 0.5
 		etime);
 #endif
 }
@@ -814,47 +735,6 @@ void LSHReservoirSampler::query_frequentitem_cpu_openmp(int numQueryEntries, uns
 	auto end = Clock::now();
 	float etime = (end - begin).count() / (float)1000000;
 	printf("[Timer] query_extractRows_cpu_openmp took %5.3f ms\n", etime);
-#endif
-}
-
-void LSHReservoirSampler::query_extractRows_cpu_opencl(int numQueryEntries, int segmentSizePow2, cl_mem *queue_obj, 
-	cl_mem *hashIndices_obj) {
-
-#ifdef PROFILE_READ_DETAILED
-	auto begin = Clock::now();
-#endif
-	_err = clSetKernelArg(kernelc_extract_rows, 0, sizeof(cl_mem), (void *)&_tablePointers_obj);
-	_err |= clSetKernelArg(kernelc_extract_rows, 1, sizeof(cl_mem), (void *)&_tableMem_obj);
-	_err |= clSetKernelArg(kernelc_extract_rows, 2, sizeof(cl_mem), (void *)hashIndices_obj);
-	_err |= clSetKernelArg(kernelc_extract_rows, 3, sizeof(cl_mem), (void *)queue_obj);
-	_err |= clSetKernelArg(kernelc_extract_rows, 4, sizeof(unsigned int), (void *)&_numReservoirsHashed);
-	_err |= clSetKernelArg(kernelc_extract_rows, 5, sizeof(unsigned int), (void *)&_aggNumReservoirs);
-	_err |= clSetKernelArg(kernelc_extract_rows, 6, sizeof(unsigned int), (void *)&numQueryEntries);
-	_err |= clSetKernelArg(kernelc_extract_rows, 7, sizeof(unsigned int), (void *)&segmentSizePow2);
-	_err |= clSetKernelArg(kernelc_extract_rows, 8, sizeof(unsigned int), (void *)&_sechash_a);
-	_err |= clSetKernelArg(kernelc_extract_rows, 9, sizeof(unsigned int), (void *)&_sechash_b);
-	_err |= clSetKernelArg(kernelc_extract_rows, 10, sizeof(unsigned int), (void *)&_reservoirSize);
-	_err |= clSetKernelArg(kernelc_extract_rows, 11, sizeof(unsigned int), (void *)&_numSecHash);
-	_err |= clSetKernelArg(kernelc_extract_rows, 12, sizeof(unsigned int), (void *)&_queryProbes);
-
-	clCheckError(_err, "Failed to set kernelc_extract_rows arguments!");
-
-	size_t gsize_kernelc_extract_rows[3] = { numQueryEntries, _numTables, _reservoirSize };
-	size_t lsize_kernelc_extract_rows[3] = { 1, 1, _reservoirSize };
-	_err = clEnqueueNDRangeKernel(command_queue_cpu, kernelc_extract_rows, 3, NULL,
-		gsize_kernelc_extract_rows, lsize_kernelc_extract_rows, 0, NULL, NULL);
-	clFinish(command_queue_cpu);
-	clCheckError(_err, "kernelc_extract_rows failed!");
-#ifdef PROFILE_READ_DETAILED
-	auto end = Clock::now();
-	float etime = (end - begin).count() / (float)1000000;
-	printf("[Timer] kernelc_extract_rows took %5.3f ms\n", etime);
-	kernelBandWidth("kernelc_extract_rows",
-		(float)numQueryEntries * _numTables * sizeof(unsigned int) + // Read hashIndices_obj
-		(float)numQueryEntries * _numTables * sizeof(unsigned int) +  // Access table pointers
-		(float)numQueryEntries * _numTables * _reservoirSize * sizeof(unsigned int), // Access reservoirs
-		(float)numQueryEntries * _numTables * _reservoirSize * sizeof(unsigned int), // Write to queue
-		etime);
 #endif
 }
 

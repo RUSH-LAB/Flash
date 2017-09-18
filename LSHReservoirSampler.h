@@ -48,7 +48,6 @@ private:
 	cl_int _err;
 	cl_kernel kernel_reservoir, kernel_addtable, kernel_extract_rows, kernel_taketopk,
 		kernel_markdiff, kernel_aggdiff, kernel_subtractdiff, kernel_tally_naive;
-	cl_kernel kernelc_reservoir, kernelc_addtable, kernelc_extract_rows;
 	cl_kernel kernel_bsort_preprocess, kernel_bsort_postprocess, kernel_bsort_init_manning, 
 		kernel_bsort_stage_0_manning, kernel_bsort_stage_n_manning, kernel_bsort_stage_0_manning_kv, 
 		kernel_bsort_stage_n_manning_kv, kernel_bsort_init_manning_kv;
@@ -81,13 +80,10 @@ private:
 
 	/* Buildingblocks. */
 	void reservoir_sampling_gpu(cl_mem *allprobsHash_obj, cl_mem *allprobsIdx_obj, cl_mem *storelog_obj, int numProbePerTb);
-	void reservoir_sampling_cpu_opencl(cl_mem *allprobsHash_obj, cl_mem *allprobsIdx_obj, cl_mem *storelog_obj, int numProbePerTb);
 	void reservoir_sampling_cpu_openmp(unsigned int *allprobsHash, unsigned int *allprobsIdx, unsigned int *storelog, int numProbePerTb);
 	void add_table_gpu(cl_mem *storelog_obj, int numProbePerTb);
-	void add_table_cpu_opencl(cl_mem *storelog_obj, int numProbePerTb);
 	void add_table_cpu_openmp(unsigned int *storelog, int numProbePerTb);
 	void query_extractRows_gpu(int numQueryEntries, int segmentSizePow2, cl_mem *queue_obj, cl_mem *hashIndices_obj);
-	void query_extractRows_cpu_opencl(int numQueryEntries, int segmentSizePow2, cl_mem *queue_obj, cl_mem *hashIndices_obj);
 	void query_extractRows_cpu_openmp(int numQueryEntries, int segmentSizePow2, unsigned int *queue, unsigned int *hashIndices);
 	void query_frequentitem_cpu_openmp(int numQueryEntries, unsigned int *outputs, unsigned int *hashIndices, int topk);
 	void query_tallyReduction(int numQueryEntries, int segmentSize, int segmentSizePow2, cl_mem *talley_obj, cl_mem *talleyCount_obj);
@@ -98,10 +94,8 @@ private:
 
 	/* Routines. */
 	void HashAddGPUTB(cl_mem *allprobsHash_gpuobj, cl_mem* allprobsIdx_gpuobj, int numProbePerTb, int numInputEntries);
-	void HashAddCPUCLTB(cl_mem *allprobsHash_gpuobj, cl_mem* allprobsIdx_gpuobj, int numProbePerTb, int numInputEntries);
 	void HashAddCPUTB(unsigned int *allprobsHash, unsigned int* allprobsIdx, int numProbePerTb, int numInputEntries);
 	void RowsAggregationGPUTB(cl_mem *hashIndices_gpuobj, cl_mem *tally_gpuobj, int segmentSizePow2, int numQueryEntries);
-	void RowsAggregationCPUCLTB(cl_mem *hashIndices_gpuobj, cl_mem *tally_gpuobj, int segmentSizePow2, int numQueryEntries);
 	void RowsAggregationCPUTB(unsigned int *hashIndices, cl_mem *tally_gpuobj, int segmentSizePow2, int numQueryEntries);
 	void kSelect(cl_mem *tally_gpuobj, unsigned int *outputs, int segmentSize, int segmentSizePow2, int numQueryEntries, int topk);
 	void kSelect(unsigned int *tally, unsigned int *outputs, int segmentSize, int numQueryEntries, int topk);
@@ -110,8 +104,8 @@ private:
 	/* Aux. */
 	void clCheckError(cl_int code, const char* msg);
 	void clCheckErrorNoExit(cl_int code, const char* msg);
-	void clMemCpy_uint_g2c(cl_mem *dst, cl_mem *src, unsigned int size);
-	void clMemCpy_uint_c2g(cl_mem *dst, cl_mem *src, unsigned int size);
+	//void clMemCpy_uint_g2c(cl_mem *dst, cl_mem *src, unsigned int size);
+	//void clMemCpy_uint_c2g(cl_mem *dst, cl_mem *src, unsigned int size);
 	void memCpy_uint_g2c(unsigned int *dst, cl_mem *src, unsigned int size);
 	void memCpy_uint_c2g(cl_mem *dst, unsigned int *src, unsigned int size);
 	void kernelBandWidth(const std::string&, float br, float bw, float time);
@@ -136,10 +130,10 @@ public:
 	cl_program program_gpu;
 	cl_command_queue command_queue_gpu;
 
-	cl_device_id *devices_cpu;
-	cl_context context_cpu;
-	cl_program program_cpu;
-	cl_command_queue command_queue_cpu;
+	//cl_device_id *devices_cpu;
+	//cl_context context_cpu;
+	//cl_program program_cpu;
+	//cl_command_queue command_queue_cpu;
 
 	void restart(LSH *hashFamIn, unsigned int numHashPerFamily, unsigned int numHashFamilies,
 		unsigned int reservoirSize, unsigned int dimension, unsigned int numSecHash, unsigned int maxSamples,
