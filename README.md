@@ -28,13 +28,7 @@ For the testing of the sparse datasets, we present results on 2 CPUs (Intel Xeon
 
 ## Prerequisites
 
-The current version of the soft is tested on 64-bit machines running Ubuntu 16.04, with CPU and at least 1 GPGPU installed. The compiler needs to support C++11 and OpenMP. 
-
-### GPGPU
-
-An active installation of OpenCL 1.1 or OpenCL 2.0 is required to support the GPGPU capability. OpenCL on Nvidia graphics cards requires the installation of [CUDA](https://developer.nvidia.com/cuda-toolkit-32-downloads). 
-
-Then, install clinfo by `apt-get install clinfo` and verify the number of OpenCL platforms and devices. These information will be used in the configurations. 
+The current version of the software is tested on 64-bit machines running Ubuntu 16.04, with CPU and at least 1 GPGPU installed. The compiler needs to support C++11 and OpenMP. GPGPU support of OpenCL 1.1 or OpenCL 2.0 is required. For example, OpenCL on Nvidia graphics cards requires the installation of [CUDA](https://developer.nvidia.com/cuda-toolkit-32-downloads). 
 
 ## System Configuration
 
@@ -116,7 +110,7 @@ Then modify the file location and parameters below in the Parameters section. */
 
 #define BASEFILE		".../trigram.svm"
 #define QUERYFILE		".../trigram.svm"
-#define GTRUTHINDICE	".../webspam_tri_gtruth_indices.txt"
+#define GTRUTHINDICE		".../webspam_tri_gtruth_indices.txt"
 #define GTRUTHDIST		".../webspam_tri_gtruth_distances.txt"
 ```
 Configure the system for **sparse data**, CPU or CPU + GPU and run the program (if not already done, see **System Configuration** above). 
