@@ -9,10 +9,9 @@
 #include <random>
 #include <algorithm>
 #include "omp.h"
-#include "ALSH.h"
 
 //#define DEBUG
-#define MAGIC_NUMBER 100
+#define MAGIC_NUMBER 100 // For debugging purpose, ignore. 
 
 #define UNIVERSAL_HASH(x,M,a,b) ((unsigned) (a * x + b) >> (32 - M))
 #define BINARY_HASH(x,a,b) ((unsigned) (a * x + b) >> 31)

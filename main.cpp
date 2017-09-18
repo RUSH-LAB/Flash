@@ -31,7 +31,6 @@ int main(void) {
 #elif defined(DENSE_DATASET)
 	benchmark_dense();
 #endif
-	system("pause");
 	return 0;
 }
 

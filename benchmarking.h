@@ -4,8 +4,8 @@
 Then modify the file location and parameters below in the Parameters section. */
 
 //#define SIFT1M
-#define URL
-//#define WEBSPAM_TRI
+//#define URL
+#define WEBSPAM_TRI
 //#define KDD12
 
 /* Parameters. */
