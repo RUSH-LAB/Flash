@@ -4,14 +4,12 @@ FLASH (Fast LSH Algorithm for Similarity Search Accelerated with HPC) is a libra
 
 ## Performance
 
-We tested our system on a few large scale sparse datasets including [url](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#url), [webspam](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#webspam) and [kdd12](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#kdd2012), and also a dense dataset [SIFT1M](http://corpus-texmex.irisa.fr/). 
+We tested our system on a few large scale sparse datasets including [url](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#url), [webspam](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#webspam) and [kdd12](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#kdd2012). 
 
 ### Quality Metrtics
 
 *R@k* is the recall of the 1-nearest neighbor in the top-k results. 
 *S@k* is the average cosine similarity of the top-k results concerning the query datapoint. 
-
-For the dense SIFT1M dataset, we used 1 GPU (Nvidia Tesla P100) for all the processing. We constructed the hashtable within 3 seconds and achieved R@100 = 0.659, S@1 = 0.844 and S@100 = 0.751 with per query runtime of 0.038 milliseconds. 
 
 For the testing of the sparse datasets, we present results on 2 CPUs (Intel Xeon E5 2660v4) and 2 CPUs + 1 GPU. The following results are from a head-to-head comparison with [NMSLIB](https://github.com/searchivarius/nmslib) v1.6 hnsw, one of the best methods available (see [ann-benchmarks](https://github.com/erikbern/ann-benchmarks)). In particular, we compared the timing for the construction of full knn-graph from grounds up, and the per-query timing (after building the index). We also estimated and compared the memory consumption of the index. 
 
@@ -97,7 +95,6 @@ Open `benchmarking.h` and follow the following configuration. Make sure to set t
 /* Select a dataset below by uncommenting it. 
 Then modify the file location and parameters below in the Parameters section. */
 
-//#define SIFT1M
 //#define URL
 #define WEBSPAM_TRI
 //#define KDD12
