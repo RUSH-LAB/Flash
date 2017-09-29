@@ -4,14 +4,15 @@ FLASH (Fast LSH Algorithm for Similarity Search Accelerated with HPC) is a libra
 
 ## Performance
 
-We tested our system on a few large scale sparse datasets including [url](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#url), [webspam](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#webspam) and [kdd12](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#kdd2012). 
-
-The following results are from a head-to-head comparison with [NMSLIB](https://github.com/searchivarius/nmslib) v1.6 hnsw, one of the best methods available (see [ann-benchmarks](https://github.com/erikbern/ann-benchmarks)) on these datasets. In particular, we compared the timing for the construction of full knn-graph from grounds up, and the per-query timing (after building the index). We also estimated and compared the memory consumption of the index. 
+We tested our system on a few large scale sparse datasets including [url](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#url), [webspam](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#webspam) and [kdd12](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#kdd2012), and also a dense dataset [SIFT1M](http://corpus-texmex.irisa.fr/). 
 
 ### Quality Metrtics
 
 *R@k* is the recall of the 1-nearest neighbor in the top-k results. 
 *S@k* is the average cosine similarity of the top-k results concerning the query datapoint. 
+
+For the testing of the sparse datasets, we present results on 2 CPUs (Intel Xeon E5 2660v4) and 2 CPUs + 1 GPU. The following results are from a head-to-head comparison with [NMSLIB](https://github.com/searchivarius/nmslib) v1.6 hnsw, one of the best methods available (see [ann-benchmarks](https://github.com/erikbern/ann-benchmarks)). In particular, we compared the timing for the construction of full knn-graph from grounds up, and the per-query timing (after building the index). We also estimated and compared the memory consumption of the index. 
+
 
 **Webspam, Url**
 
@@ -25,51 +26,93 @@ The following results are from a head-to-head comparison with [NMSLIB](https://g
 
 ## Prerequisites
 
-The current version of the soft is tested on 64-bit machines running Ubuntu 16.04, with CPU and at least 1 GPGPU installed. The compiler needs to support C++11 and OpenMP. 
+The current version of the software is tested on 64-bit machines running Ubuntu 16.04, with CPU and at least 1 GPGPU installed. The compiler needs to support C++11 and OpenMP. GPGPU support of OpenCL 1.1 or OpenCL 2.0 is required. For example, OpenCL on Nvidia graphics cards requires the installation of [CUDA](https://developer.nvidia.com/cuda-toolkit-32-downloads). 
 
-### GPGPU
+## System Configuration
 
-An active installation of OpenCL 1.1 or OpenCL 2.0 is required to support the GPGPU capability. OpenCL on Nvidia graphics cards requires the installation of [CUDA](https://developer.nvidia.com/cuda-toolkit-32-downloads). 
-
-Then, install clinfo by `apt-get install clinfo` and verify the number of OpenCL platforms and devices. These information will be used in the configurations. 
-
-## Configuration and Compilation
-
-Navigate to the FLASH directory. Configure the system by editing the following section of *LSHReservoir_config.h* guided by the comments: 
+Navigate to the FLASH directory. First configure the system by editing the following section of *LSHReservoir_config.h* to choose the devices to use. 
 
 ```
-// Comment out if not using GPU. 
-#define USE_GPU
-// Comment out if using OpenCL 1.XX. Does not matter if not usng GPU. 
+// Customize processing architecture. 
+#define OPENCL_HASHTABLE // Placing the hashtable in the OpenCL device. 
+#define OPENCL_HASHING   // Perform hashing in the OpenCL device. 
+#define OPENCL_KSELECT	 // Perform k-selection in the OpenCL device. 
+
+// Comment out if using OpenCL 1.XX. 
 #define OPENCL_2XX
 
-#define CL_GPU_PLATFORM 0 // Does not matter if not usng OpenCL-GPU. 
-#define CL_CPU_PLATFORM 1 // Does not matter if not usng OpenCL-CPU. 
-#define CL_GPU_DEVICE 0 // Does not matter if not usng OpenCL-GPU. 
-#define CL_CPU_DEVICE 0 // Does not matter if not usng OpenCL-CPU. 
+// Select the id of the desired platform and device, only relevant when using OpenCl. 
+// An overview of the platforms and devices can be queried through the OpenCL framework. 
+// On Linux, a package "clinfo" is also capable of outputing the platform and device information. 
+#define CL_PLATFORM_ID 0
+#define CL_DEVICE_ID 0
 ```
-
-Fill in CL_GPU_PLATFORM / CL_GPU_PLATFORM according to the order that the cpu/gpu platforms appear in the output of clinfo (make sure that for gpu is correct, OpenCL for cpu is currently experimental and is not required). If multiple devices exist, fill in CL_GPU_DEVICE / CL_CPU_DEVICE to choose the desired device according to their order in the output of clinfo. 
-
-Save and close the file. Type in terminal:
+For dense datasets:
+1. GPU only
 
 ```
-make
+// Customize processing architecture. 
+#define OPENCL_HASHTABLE // Placing the hashtable in the OpenCL device. 
+#define OPENCL_HASHING   // Perform hashing in the OpenCL device. 
+#define OPENCL_KSELECT	 // Perform k-selection in the OpenCL device. 
 ```
+For sparse datasets:
+1. CPU + GPU
 
-The compilation is complete if no errors appear. 
+```
+// Customize processing architecture. 
+//#define OPENCL_HASHTABLE // Placing the hashtable in the OpenCL device. 
+//#define OPENCL_HASHING   // Perform hashing in the OpenCL device. 
+#define OPENCL_KSELECT	 // Perform k-selection in the OpenCL device. 
+```
+2. CPU only
+```
+// Customize processing architecture. 
+//#define OPENCL_HASHTABLE // Placing the hashtable in the OpenCL device. 
+//#define OPENCL_HASHING   // Perform hashing in the OpenCL device. 
+//#define OPENCL_KSELECT	 // Perform k-selection in the OpenCL device. 
+```
+Install clinfo by `apt-get install clinfo`. Fill in CL_PLATFORM_ID / CL_DEVICE_ID to choose the desired platform and device based on to the order that the GPU platforms and devices appear in the output of clinfo. Comment out `OPENCL_2XX` if using OpenCL 1.X. Save and close the file. 
 
-## Tutorial
-
-The current example code in the main() function verifies one of the results presented in [our paper](https://arxiv.org/pdf/1709.01190.pdf) on the Webspam dataset. Download the dataset from [libsvm](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#webspam), and rename the libsvm-format file as trigram.svm. Download the groundtruths from  this [link](https://github.com/wangyiqiu/webspam). Place the dataset and groundtruth files in the FLASH directory. Run the program from the terminal:
-
+Complete the dataset setup as detailed in the **Tutorial** section (or any customized usage, please refer to our [documentation](https://github.com/RUSH-LAB/Flash/blob/master/doc.pdf)), and compile the program: 
+```
+make clean; make
+```
+The compilation is complete if no errors appear. Run the program by: 
 ```
 ./runme
 ```
 
-The test program builds multiple hash tables for the dataset and query 10,000 test vectors followed by quality evaluations. The program will run with console outputs, indicating the progress and performance. The parameters, such as L, K and R can be edited in main.cpp. A re-compilation is required after changing the parameters. Please note that the time for parsing the dataset from disk might take about 5-10 minutes. 
+## Tutorial
 
-A basic [documentation](https://github.com/RUSH-LAB/Flash/blob/master/doc.pdf) of the API generated by [doxygen](http://www.stack.nl/~dimitri/doxygen/) is available. Tutorial codes in main.cpp could be used as a reference. 
+We will present very detailed steps to replicate one result presented in [our paper](https://arxiv.org/pdf/1709.01190.pdf), in particular the webspam dataset. Other results can be replicated in a very similar manner. For customized usage, please refer to our [documentation](https://github.com/RUSH-LAB/Flash/blob/master/doc.pdf) generated by [doxygen](http://www.stack.nl/~dimitri/doxygen/). 
+
+Download the dataset from [libsvm](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#webspam), and the groundtruths from  this [link](https://github.com/wangyiqiu/webspam). Place the dataset and groundtruth files in a directory you like. 
+
+Open `benchmarking.h` and follow the following configuration. Make sure to set the **path** of the dataset and groundtruth files correctly under `#elif defined WEBSPAM_TRI`. 
+
+```
+/* Select a dataset below by uncommenting it. 
+Then modify the file location and parameters below in the Parameters section. */
+
+//#define URL
+#define WEBSPAM_TRI
+//#define KDD12
+
+...
+
+#elif defined WEBSPAM_TRI
+
+...
+
+#define BASEFILE		".../trigram.svm"
+#define QUERYFILE		".../trigram.svm"
+#define GTRUTHINDICE		".../webspam_tri_gtruth_indices.txt"
+#define GTRUTHDIST		".../webspam_tri_gtruth_distances.txt"
+```
+Configure the system for **sparse data**, CPU or CPU + GPU and run the program (if not already done, see **System Configuration** above). 
+
+The test program builds multiple hash tables for the dataset and query 10,000 test vectors followed by quality evaluations. The program will run with console outputs, indicating the progress and performance. `make clean; make` is required after changing the parameters. Please note that the time for parsing the webspam dataset from disk might take about 5-10 minutes. 
 
 ## Authors
 
