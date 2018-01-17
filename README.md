@@ -2,6 +2,8 @@
 
 FLASH (Fast LSH Algorithm for Similarity Search Accelerated with HPC) is a library for large scale approximate nearest neighbor search of sparse vectors. It is currently available in C++ for CPU parallel computing and supports OpenCL enabled GPGPU computing. See [our paper](https://arxiv.org/pdf/1709.01190.pdf) for theoretical and benchmarking details. 
 
+**Coming soon: ** Full GPU ANNS over sparse datasets, providing additional speed up over the current benchmark. 
+
 ## Performance
 
 We tested our system on a few large scale sparse datasets including [url](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#url), [webspam](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#webspam) and [kdd12](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#kdd2012). 
@@ -118,6 +120,7 @@ The test program builds multiple hash tables for the dataset and query 10,000 te
 
 - [Yiqiu Wang](https://github.com/wangyiqiu)
 - [Anshumali Shrivastava](https://www.cs.rice.edu/~as143/)
+- [Jonathan Wang](https://www.linkedin.com/in/jonathan-wang-725ab28a/)
 - [Heejung Ryu](https://github.com/bluejay9676)
 
 ## License
