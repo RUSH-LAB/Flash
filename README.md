@@ -4,6 +4,10 @@ FLASH (Fast LSH Algorithm for Similarity Search Accelerated with HPC) is a libra
 
 **Coming soon: ** Full GPU ANNS over sparse datasets, providing additional speed up over the current benchmark. 
 
+## Reproducibility
+
+To reproduce the exact results in the paper, see detailed step in reproducibility.pdf in the root folder.
+
 ## Performance
 
 We tested our system on a few large scale sparse datasets including [url](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#url), [webspam](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#webspam) and [kdd12](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#kdd2012). 
